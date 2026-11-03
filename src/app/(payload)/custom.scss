@@ -1,0 +1,46 @@
+
+/* Ikon menu samping admin (emoji, tanpa dependensi). Kunci = id tautan `nav-<slug>` / `nav-global-<slug>`. */
+.nav__link#nav-users .nav__link-label::before { content: '👤'; display: inline-block; width: 1.6em; }
+.nav__link#nav-media .nav__link-label::before { content: '🖼️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-product-categories .nav__link-label::before { content: '🗂️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-products .nav__link-label::before { content: '☕'; display: inline-block; width: 1.6em; }
+.nav__link#nav-articles .nav__link-label::before { content: '📰'; display: inline-block; width: 1.6em; }
+.nav__link#nav-pages .nav__link-label::before { content: '📄'; display: inline-block; width: 1.6em; }
+.nav__link#nav-faqs .nav__link-label::before { content: '❓'; display: inline-block; width: 1.6em; }
+.nav__link#nav-redirects .nav__link-label::before { content: '🔀'; display: inline-block; width: 1.6em; }
+.nav__link#nav-loyverse-categories .nav__link-label::before { content: '🗃️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-loyverse-items .nav__link-label::before { content: '🍽️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-shipping-methods .nav__link-label::before { content: '🚚'; display: inline-block; width: 1.6em; }
+.nav__link#nav-payment-methods .nav__link-label::before { content: '💳'; display: inline-block; width: 1.6em; }
+.nav__link#nav-discount-codes .nav__link-label::before { content: '🏷️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-provinces .nav__link-label::before { content: '📍'; display: inline-block; width: 1.6em; }
+.nav__link#nav-cities .nav__link-label::before { content: '📍'; display: inline-block; width: 1.6em; }
+.nav__link#nav-districts .nav__link-label::before { content: '📍'; display: inline-block; width: 1.6em; }
+.nav__link#nav-customers .nav__link-label::before { content: '👥'; display: inline-block; width: 1.6em; }
+.nav__link#nav-orders .nav__link-label::before { content: '🧾'; display: inline-block; width: 1.6em; }
+.nav__link#nav-stock-reservations .nav__link-label::before { content: '📦'; display: inline-block; width: 1.6em; }
+.nav__link#nav-reviews .nav__link-label::before { content: '⭐'; display: inline-block; width: 1.6em; }
+.nav__link#nav-returns .nav__link-label::before { content: '↩️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-contact-messages .nav__link-label::before { content: '✉️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-wholesale-inquiries .nav__link-label::before { content: '🏢'; display: inline-block; width: 1.6em; }
+.nav__link#nav-newsletter-subscribers .nav__link-label::before { content: '📬'; display: inline-block; width: 1.6em; }
+.nav__link#nav-stock-alerts .nav__link-label::before { content: '🔔'; display: inline-block; width: 1.6em; }
+.nav__link#nav-email-templates .nav__link-label::before { content: '📧'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-home .nav__link-label::before { content: '🏠'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-about .nav__link-label::before { content: 'ℹ️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-gallery .nav__link-label::before { content: '📸'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-news-page .nav__link-label::before { content: '📰'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-faq-page .nav__link-label::before { content: '❓'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-contact-page .nav__link-label::before { content: '☎️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-announcement .nav__link-label::before { content: '📢'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-navigation .nav__link-label::before { content: '🧭'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-footer .nav__link-label::before { content: '🔻'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-site-settings .nav__link-label::before { content: '⚙️'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-ui-strings .nav__link-label::before { content: '🔤'; display: inline-block; width: 1.6em; }
+.nav__link#nav-global-integrations .nav__link-label::before { content: '🔌'; display: inline-block; width: 1.6em; }
+[id='nav-group-Loyverse'] .nav-group__label::before { content: '🔄'; display: inline-block; width: 1.6em; }
+[id='nav-group-Checkout'] .nav-group__label::before { content: '🛒'; display: inline-block; width: 1.6em; }
+[id='nav-group-Wilayah'] .nav-group__label::before { content: '🗺️'; display: inline-block; width: 1.6em; }
+[id='nav-group-Pelanggan'] .nav-group__label::before { content: '👥'; display: inline-block; width: 1.6em; }
+[id='nav-group-Form masuk'] .nav-group__label::before { content: '📥'; display: inline-block; width: 1.6em; }
+[id='nav-group-Pengaturan'] .nav-group__label::before { content: '⚙️'; display: inline-block; width: 1.6em; }

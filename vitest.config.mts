@@ -8,5 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['tests/int/**/*.int.spec.ts'],
+    // Semua tes memakai satu database (dan mendorong skema saat start), jadi tidak boleh paralel.
+    fileParallelism: false,
   },
 })

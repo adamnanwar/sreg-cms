@@ -64,12 +64,38 @@ export type SupportedTimezones =
 export interface Config {
   auth: {
     users: UserAuthOperations;
+    customers: CustomerAuthOperations;
   };
   blocks: {};
   collections: {
     users: User;
     media: Media;
+    'product-categories': ProductCategory;
+    products: Product;
+    'loyverse-categories': LoyverseCategory;
+    'loyverse-items': LoyverseItem;
+    articles: Article;
+    pages: Page;
+    faqs: Faq;
+    customers: Customer;
+    'shipping-methods': ShippingMethod;
+    'payment-methods': PaymentMethod;
+    'discount-codes': DiscountCode;
+    provinces: Province;
+    cities: City;
+    districts: District;
+    orders: Order;
+    'stock-reservations': StockReservation;
+    returns: Return;
+    reviews: Review;
+    'stock-alerts': StockAlert;
+    'newsletter-subscribers': NewsletterSubscriber;
+    'contact-messages': ContactMessage;
+    'wholesale-inquiries': WholesaleInquiry;
+    'email-templates': EmailTemplate;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -78,28 +104,106 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'product-categories': ProductCategoriesSelect<false> | ProductCategoriesSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    'loyverse-categories': LoyverseCategoriesSelect<false> | LoyverseCategoriesSelect<true>;
+    'loyverse-items': LoyverseItemsSelect<false> | LoyverseItemsSelect<true>;
+    articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
+    'shipping-methods': ShippingMethodsSelect<false> | ShippingMethodsSelect<true>;
+    'payment-methods': PaymentMethodsSelect<false> | PaymentMethodsSelect<true>;
+    'discount-codes': DiscountCodesSelect<false> | DiscountCodesSelect<true>;
+    provinces: ProvincesSelect<false> | ProvincesSelect<true>;
+    cities: CitiesSelect<false> | CitiesSelect<true>;
+    districts: DistrictsSelect<false> | DistrictsSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
+    'stock-reservations': StockReservationsSelect<false> | StockReservationsSelect<true>;
+    returns: ReturnsSelect<false> | ReturnsSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    'stock-alerts': StockAlertsSelect<false> | StockAlertsSelect<true>;
+    'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
+    'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
+    'wholesale-inquiries': WholesaleInquiriesSelect<false> | WholesaleInquiriesSelect<true>;
+    'email-templates': EmailTemplatesSelect<false> | EmailTemplatesSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
-  fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
-  locale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'id') | ('en' | 'id')[];
+  globals: {
+    'site-settings': SiteSetting;
+    announcement: Announcement;
+    navigation: Navigation;
+    footer: Footer;
+    home: Home;
+    about: About;
+    gallery: Gallery;
+    'news-page': NewsPage;
+    'faq-page': FaqPage;
+    'contact-page': ContactPage;
+    'ui-strings': UiString;
+    integrations: Integration;
+    'payload-jobs-stats': PayloadJobsStat;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    announcement: AnnouncementSelect<false> | AnnouncementSelect<true>;
+    navigation: NavigationSelect<false> | NavigationSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
+    home: HomeSelect<false> | HomeSelect<true>;
+    about: AboutSelect<false> | AboutSelect<true>;
+    gallery: GallerySelect<false> | GallerySelect<true>;
+    'news-page': NewsPageSelect<false> | NewsPageSelect<true>;
+    'faq-page': FaqPageSelect<false> | FaqPageSelect<true>;
+    'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
+    'ui-strings': UiStringsSelect<false> | UiStringsSelect<true>;
+    integrations: IntegrationsSelect<false> | IntegrationsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
+  };
+  locale: 'en' | 'id';
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: User | Customer;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      'loyverse-sync': TaskLoyverseSync;
+      'expire-orders': TaskExpireOrders;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
 export interface UserAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
+export interface CustomerAuthOperations {
   forgotPassword: {
     email: string;
     password: string;
@@ -122,7 +226,8 @@ export interface UserAuthOperations {
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
+  role: 'admin' | 'editor' | 'ops';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -148,8 +253,10 @@ export interface User {
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
+  id: number;
   alt: string;
+  caption?: string | null;
+  credit?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -161,13 +268,827 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumb?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    full?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-categories".
+ */
+export interface ProductCategory {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  label: string;
+  blurb?: string | null;
+  sectorImage?: (number | null) | Media;
+  /**
+   * Opsional, mis. NEW MENU!
+   */
+  sectorBadge?: string | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  category: number | ProductCategory;
+  name: string;
+  /**
+   * Baris kecil di atas nama, mis. GUJI, ETHIOPIA // 2000 MASL
+   */
+  eyebrow?: string | null;
+  /**
+   * Skor cupping (biji kopi saja)
+   */
+  score?: number | null;
+  specs?:
+    | {
+        label: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  notes?:
+    | {
+        note: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Harga, pajak, dan stok berasal dari Loyverse dan tidak bisa diubah di sini.
+   */
+  loyverse: {
+    /**
+     * ID item di Loyverse (kunci penaut).
+     */
+    itemId: string;
+    active?: boolean | null;
+    price?: number | null;
+    variants?:
+      | {
+          variantId: string;
+          sku?: string | null;
+          optionLabel?: string | null;
+          price?: number | null;
+          stock?: number | null;
+          soldOut?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    taxIncluded?: boolean | null;
+    taxRate?: number | null;
+    soldOut?: boolean | null;
+    lowStock?: boolean | null;
+    syncedAt?: string | null;
+  };
+  ratingAvg?: number | null;
+  ratingCount?: number | null;
+  /**
+   * Teks panjang, mis. 250G POUCH
+   */
+  size?: string | null;
+  /**
+   * Dipakai di keranjang/pesanan, mis. 250 g
+   */
+  unit?: string | null;
+  /**
+   * PNG transparan, bungkus saja, min. 1000 px.
+   */
+  image: number | Media;
+  /**
+   * Nama tampilan per varian Loyverse. Harga dan stok tetap dari Loyverse.
+   */
+  variantLabels?:
+    | {
+        variantId: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Pilihan yang tidak mengubah harga/stok, mis. Grind. Kosong untuk minuman dan roti.
+   */
+  lineOptions?: {
+    label?: string | null;
+    choices?:
+      | {
+          label: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Untuk ongkir (Fase 2)
+   */
+  weightGrams?: number | null;
+  /**
+   * Sembunyikan dari web walau terbit.
+   */
+  hidden?: boolean | null;
+  isNew?: boolean | null;
+  featuredRank?: number | null;
+  /**
+   * Opsional. Kosong → frontend memilih kategori yang sama.
+   */
+  related?: (number | Product)[] | null;
+  detail?: {
+    eyebrow?: string | null;
+    summary?: string | null;
+    caption?: string | null;
+    /**
+     * Dua baris; baris baru dipertahankan.
+     */
+    tagline?: string | null;
+    story?: string | null;
+    facts?:
+      | {
+          label: string;
+          value: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Centang untuk menampilkan semua menu di kategori ini di web. Daftar diperbarui oleh sinkron Loyverse.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loyverse-categories".
+ */
+export interface LoyverseCategory {
+  id: number;
+  categoryId: string;
+  name: string;
+  showOnWeb?: boolean | null;
+  /**
+   * Kategori web untuk produk baru yang dibuat dari kategori Loyverse ini.
+   */
+  webCategory?: (number | null) | ProductCategory;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Centang menu yang ingin ditampilkan di web (bisa banyak sekaligus lewat pilih + Edit). Daftar diperbarui oleh sinkron Loyverse.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loyverse-items".
+ */
+export interface LoyverseItem {
+  id: number;
+  itemId: string;
+  name: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  minPrice?: number | null;
+  variantCount?: number | null;
+  showOnWeb?: boolean | null;
+  product?: (number | null) | Product;
+  /**
+   * Item sudah tidak ada di Loyverse.
+   */
+  missing?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  title: string;
+  excerpt?: string | null;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  image?: (number | null) | Media;
+  publishedAt?: string | null;
+  featured?: boolean | null;
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  title: string;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  question: string;
+  answer: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  category?: ('ordering' | 'shipping' | 'payment' | 'products' | 'wholesale' | 'other') | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: number;
+  name: string;
+  phone?: string | null;
+  addresses?:
+    | {
+        label?: string | null;
+        firstName: string;
+        lastName?: string | null;
+        phone: string;
+        country?: string | null;
+        street: string;
+        address2?: string | null;
+        province: string;
+        city: string;
+        district: string;
+        postalCode: string;
+        isDefault?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  newsletter?: boolean | null;
+  wishlist?: (number | Product)[] | null;
+  xeroContactId?: string | null;
+  loyverseCustomerId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'customers';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping-methods".
+ */
+export interface ShippingMethod {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  name: string;
+  /**
+   * Mis. Estimated delivery: 2–3 business days
+   */
+  etaText?: string | null;
+  daysLabel?: string | null;
+  /**
+   * Hari kerja
+   */
+  minDays: number;
+  maxDays: number;
+  /**
+   * Rupiah bulat. Diganti API ongkir di fase berikutnya.
+   */
+  price: number;
+  active?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-methods".
+ */
+export interface PaymentMethod {
+  id: number;
+  /**
+   * Dipakai di URL. Jangan diubah setelah terbit.
+   */
+  slug: string;
+  name: string;
+  detail?: string | null;
+  fee?: number | null;
+  type: 'card' | 'virtual_account' | 'qris' | 'ewallet';
+  active?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes".
+ */
+export interface DiscountCode {
+  id: number;
+  code: string;
+  type: 'percent' | 'fixed';
+  /**
+   * Persen (1–100) atau rupiah
+   */
+  value: number;
+  minSubtotal?: number | null;
+  /**
+   * Kosong = tak terbatas
+   */
+  maxUses?: number | null;
+  usedCount?: number | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces".
+ */
+export interface Province {
+  id: number;
+  code?: string | null;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities".
+ */
+export interface City {
+  id: number;
+  code?: string | null;
+  name: string;
+  province: number | Province;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "districts".
+ */
+export interface District {
+  id: number;
+  code?: string | null;
+  name: string;
+  city: number | City;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  orderNumber: string;
+  customer?: (number | null) | Customer;
+  guestToken?: string | null;
+  idempotencyKey?: string | null;
+  status: 'awaiting_payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'expired' | 'refunded';
+  /**
+   * Dibayar tetapi dibatalkan/kedaluwarsa. Perlu refund manual.
+   */
+  needsRefund?: boolean | null;
+  lang?: ('en' | 'id') | null;
+  items?:
+    | {
+        product?: (number | null) | Product;
+        loyverseVariantId?: string | null;
+        sku?: string | null;
+        slug?: string | null;
+        name: string;
+        variantLabel?: string | null;
+        variantOption?: string | null;
+        unit?: string | null;
+        image?: string | null;
+        unitPrice: number;
+        qty: number;
+        tax?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal: number;
+  discount?: number | null;
+  discountCode?: string | null;
+  shipping?: number | null;
+  shippingId?: string | null;
+  shippingName?: string | null;
+  paymentFee?: number | null;
+  tax?: number | null;
+  taxIncluded?: boolean | null;
+  total: number;
+  contact: {
+    email: string;
+    newsletter?: boolean | null;
+  };
+  address: {
+    firstName: string;
+    lastName?: string | null;
+    phone: string;
+    country?: string | null;
+    street: string;
+    address2?: string | null;
+    province: string;
+    city: string;
+    district: string;
+    postalCode: string;
+  };
+  note?: string | null;
+  payment?: {
+    methodId?: string | null;
+    provider?: string | null;
+    providerRef?: string | null;
+    cardBrand?: string | null;
+    cardLast4?: string | null;
+    instructions?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    expiresAt?: string | null;
+    paidAt?: string | null;
+  };
+  tracking?: {
+    carrier?: string | null;
+    number?: string | null;
+    url?: string | null;
+    events?:
+      | {
+          at?: string | null;
+          description?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  loyverse?: {
+    receiptNumber?: string | null;
+    receiptId?: string | null;
+    syncStatus?: ('pending' | 'done' | 'failed') | null;
+    lastError?: string | null;
+    reservedUntil?: string | null;
+  };
+  xero?: {
+    invoiceId?: string | null;
+    invoiceNumber?: string | null;
+    invoiceUrl?: string | null;
+    status?: ('pending' | 'done' | 'failed') | null;
+    paymentId?: string | null;
+    creditNoteId?: string | null;
+    lastError?: string | null;
+  };
+  emails?: {
+    orderCreatedSentAt?: string | null;
+  };
+  internalNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-reservations".
+ */
+export interface StockReservation {
+  id: number;
+  order: number | Order;
+  product?: (number | null) | Product;
+  variantId: string;
+  qty: number;
+  expiresAt?: string | null;
+  status: 'active' | 'committed' | 'fulfilled' | 'released';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "returns".
+ */
+export interface Return {
+  id: number;
+  order: number | Order;
+  items: {
+    slug: string;
+    name?: string | null;
+    qty: number;
+    id?: string | null;
+  }[];
+  reason: 'damaged' | 'wrong_item' | 'not_as_described' | 'changed_mind' | 'other';
+  reasonText?: string | null;
+  photos?:
+    | {
+        photo: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  status?: ('requested' | 'approved' | 'rejected' | 'received' | 'refunded') | null;
+  refundAmount?: number | null;
+  internalNotes?: string | null;
+  xeroCreditNoteId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  product: number | Product;
+  customer: number | Customer;
+  rating: number;
+  title?: string | null;
+  body?: string | null;
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  verifiedPurchase?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-alerts".
+ */
+export interface StockAlert {
+  id: number;
+  product: number | Product;
+  variantId?: string | null;
+  email: string;
+  notifiedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers".
+ */
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  confirmToken?: string | null;
+  confirmedAt?: string | null;
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-messages".
+ */
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject?: string | null;
+  message: string;
+  status?: ('new' | 'handled') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wholesale-inquiries".
+ */
+export interface WholesaleInquiry {
+  id: number;
+  company: string;
+  contactName: string;
+  email: string;
+  phone?: string | null;
+  volume?: string | null;
+  message?: string | null;
+  status?: ('new' | 'contacted' | 'closed') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates".
+ */
+export interface EmailTemplate {
+  id: number;
+  key:
+    | 'order-created'
+    | 'payment-received'
+    | 'shipped'
+    | 'cancelled'
+    | 'return-update'
+    | 'password-reset'
+    | 'verify-email'
+    | 'back-in-stock'
+    | 'newsletter-confirm'
+    | 'contact-received';
+  subject: string;
+  /**
+   * Placeholder: {{orderNumber}} {{customerName}} {{total}} {{orderUrl}} {{trackingUrl}} {{invoiceUrl}} {{productName}} {{productUrl}} {{returnStatus}} {{resetUrl}} {{verifyUrl}} {{confirmUrl}}
+   */
+  body: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Nonaktif → teks bawaan dipakai.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?:
+      | ({
+          relationTo: 'products';
+          value: number | Product;
+        } | null)
+      | ({
+          relationTo: 'articles';
+          value: number | Article;
+        } | null)
+      | ({
+          relationTo: 'pages';
+          value: number | Page;
+        } | null);
+    url?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -181,24 +1102,226 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'loyverse-sync' | 'expire-orders';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'loyverse-sync' | 'expire-orders') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'users';
-        value: string | User;
+        value: number | User;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'product-categories';
+        value: number | ProductCategory;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'loyverse-categories';
+        value: number | LoyverseCategory;
+      } | null)
+    | ({
+        relationTo: 'loyverse-items';
+        value: number | LoyverseItem;
+      } | null)
+    | ({
+        relationTo: 'articles';
+        value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'shipping-methods';
+        value: number | ShippingMethod;
+      } | null)
+    | ({
+        relationTo: 'payment-methods';
+        value: number | PaymentMethod;
+      } | null)
+    | ({
+        relationTo: 'discount-codes';
+        value: number | DiscountCode;
+      } | null)
+    | ({
+        relationTo: 'provinces';
+        value: number | Province;
+      } | null)
+    | ({
+        relationTo: 'cities';
+        value: number | City;
+      } | null)
+    | ({
+        relationTo: 'districts';
+        value: number | District;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'stock-reservations';
+        value: number | StockReservation;
+      } | null)
+    | ({
+        relationTo: 'returns';
+        value: number | Return;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'stock-alerts';
+        value: number | StockAlert;
+      } | null)
+    | ({
+        relationTo: 'newsletter-subscribers';
+        value: number | NewsletterSubscriber;
+      } | null)
+    | ({
+        relationTo: 'contact-messages';
+        value: number | ContactMessage;
+      } | null)
+    | ({
+        relationTo: 'wholesale-inquiries';
+        value: number | WholesaleInquiry;
+      } | null)
+    | ({
+        relationTo: 'email-templates';
+        value: number | EmailTemplate;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: string | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -207,11 +1330,16 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
-  user: {
-    relationTo: 'users';
-    value: string | User;
-  };
+  id: number;
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'customers';
+        value: number | Customer;
+      };
   key?: string | null;
   value?:
     | {
@@ -230,7 +1358,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -241,6 +1369,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -265,6 +1394,8 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  caption?: T;
+  credit?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -276,6 +1407,647 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumb?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        full?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-categories_select".
+ */
+export interface ProductCategoriesSelect<T extends boolean = true> {
+  slug?: T;
+  label?: T;
+  blurb?: T;
+  sectorImage?: T;
+  sectorBadge?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  slug?: T;
+  category?: T;
+  name?: T;
+  eyebrow?: T;
+  score?: T;
+  specs?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        id?: T;
+      };
+  notes?:
+    | T
+    | {
+        note?: T;
+        id?: T;
+      };
+  loyverse?:
+    | T
+    | {
+        itemId?: T;
+        active?: T;
+        price?: T;
+        variants?:
+          | T
+          | {
+              variantId?: T;
+              sku?: T;
+              optionLabel?: T;
+              price?: T;
+              stock?: T;
+              soldOut?: T;
+              id?: T;
+            };
+        taxIncluded?: T;
+        taxRate?: T;
+        soldOut?: T;
+        lowStock?: T;
+        syncedAt?: T;
+      };
+  ratingAvg?: T;
+  ratingCount?: T;
+  size?: T;
+  unit?: T;
+  image?: T;
+  variantLabels?:
+    | T
+    | {
+        variantId?: T;
+        label?: T;
+        id?: T;
+      };
+  lineOptions?:
+    | T
+    | {
+        label?: T;
+        choices?:
+          | T
+          | {
+              label?: T;
+              id?: T;
+            };
+      };
+  weightGrams?: T;
+  hidden?: T;
+  isNew?: T;
+  featuredRank?: T;
+  related?: T;
+  detail?:
+    | T
+    | {
+        eyebrow?: T;
+        summary?: T;
+        caption?: T;
+        tagline?: T;
+        story?: T;
+        facts?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loyverse-categories_select".
+ */
+export interface LoyverseCategoriesSelect<T extends boolean = true> {
+  categoryId?: T;
+  name?: T;
+  showOnWeb?: T;
+  webCategory?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loyverse-items_select".
+ */
+export interface LoyverseItemsSelect<T extends boolean = true> {
+  itemId?: T;
+  name?: T;
+  categoryId?: T;
+  categoryName?: T;
+  minPrice?: T;
+  variantCount?: T;
+  showOnWeb?: T;
+  product?: T;
+  missing?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  slug?: T;
+  title?: T;
+  excerpt?: T;
+  body?: T;
+  image?: T;
+  publishedAt?: T;
+  featured?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  slug?: T;
+  title?: T;
+  body?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  question?: T;
+  answer?: T;
+  category?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  addresses?:
+    | T
+    | {
+        label?: T;
+        firstName?: T;
+        lastName?: T;
+        phone?: T;
+        country?: T;
+        street?: T;
+        address2?: T;
+        province?: T;
+        city?: T;
+        district?: T;
+        postalCode?: T;
+        isDefault?: T;
+        id?: T;
+      };
+  newsletter?: T;
+  wishlist?: T;
+  xeroContactId?: T;
+  loyverseCustomerId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  _verified?: T;
+  _verificationToken?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shipping-methods_select".
+ */
+export interface ShippingMethodsSelect<T extends boolean = true> {
+  slug?: T;
+  name?: T;
+  etaText?: T;
+  daysLabel?: T;
+  minDays?: T;
+  maxDays?: T;
+  price?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-methods_select".
+ */
+export interface PaymentMethodsSelect<T extends boolean = true> {
+  slug?: T;
+  name?: T;
+  detail?: T;
+  fee?: T;
+  type?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discount-codes_select".
+ */
+export interface DiscountCodesSelect<T extends boolean = true> {
+  code?: T;
+  type?: T;
+  value?: T;
+  minSubtotal?: T;
+  maxUses?: T;
+  usedCount?: T;
+  startAt?: T;
+  endAt?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces_select".
+ */
+export interface ProvincesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities_select".
+ */
+export interface CitiesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  province?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "districts_select".
+ */
+export interface DistrictsSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  city?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  customer?: T;
+  guestToken?: T;
+  idempotencyKey?: T;
+  status?: T;
+  needsRefund?: T;
+  lang?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        loyverseVariantId?: T;
+        sku?: T;
+        slug?: T;
+        name?: T;
+        variantLabel?: T;
+        variantOption?: T;
+        unit?: T;
+        image?: T;
+        unitPrice?: T;
+        qty?: T;
+        tax?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  discount?: T;
+  discountCode?: T;
+  shipping?: T;
+  shippingId?: T;
+  shippingName?: T;
+  paymentFee?: T;
+  tax?: T;
+  taxIncluded?: T;
+  total?: T;
+  contact?:
+    | T
+    | {
+        email?: T;
+        newsletter?: T;
+      };
+  address?:
+    | T
+    | {
+        firstName?: T;
+        lastName?: T;
+        phone?: T;
+        country?: T;
+        street?: T;
+        address2?: T;
+        province?: T;
+        city?: T;
+        district?: T;
+        postalCode?: T;
+      };
+  note?: T;
+  payment?:
+    | T
+    | {
+        methodId?: T;
+        provider?: T;
+        providerRef?: T;
+        cardBrand?: T;
+        cardLast4?: T;
+        instructions?: T;
+        expiresAt?: T;
+        paidAt?: T;
+      };
+  tracking?:
+    | T
+    | {
+        carrier?: T;
+        number?: T;
+        url?: T;
+        events?:
+          | T
+          | {
+              at?: T;
+              description?: T;
+              id?: T;
+            };
+      };
+  loyverse?:
+    | T
+    | {
+        receiptNumber?: T;
+        receiptId?: T;
+        syncStatus?: T;
+        lastError?: T;
+        reservedUntil?: T;
+      };
+  xero?:
+    | T
+    | {
+        invoiceId?: T;
+        invoiceNumber?: T;
+        invoiceUrl?: T;
+        status?: T;
+        paymentId?: T;
+        creditNoteId?: T;
+        lastError?: T;
+      };
+  emails?:
+    | T
+    | {
+        orderCreatedSentAt?: T;
+      };
+  internalNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-reservations_select".
+ */
+export interface StockReservationsSelect<T extends boolean = true> {
+  order?: T;
+  product?: T;
+  variantId?: T;
+  qty?: T;
+  expiresAt?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "returns_select".
+ */
+export interface ReturnsSelect<T extends boolean = true> {
+  order?: T;
+  items?:
+    | T
+    | {
+        slug?: T;
+        name?: T;
+        qty?: T;
+        id?: T;
+      };
+  reason?: T;
+  reasonText?: T;
+  photos?:
+    | T
+    | {
+        photo?: T;
+        id?: T;
+      };
+  status?: T;
+  refundAmount?: T;
+  internalNotes?: T;
+  xeroCreditNoteId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  product?: T;
+  customer?: T;
+  rating?: T;
+  title?: T;
+  body?: T;
+  status?: T;
+  verifiedPurchase?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-alerts_select".
+ */
+export interface StockAlertsSelect<T extends boolean = true> {
+  product?: T;
+  variantId?: T;
+  email?: T;
+  notifiedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers_select".
+ */
+export interface NewsletterSubscribersSelect<T extends boolean = true> {
+  email?: T;
+  confirmToken?: T;
+  confirmedAt?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-messages_select".
+ */
+export interface ContactMessagesSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  subject?: T;
+  message?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wholesale-inquiries_select".
+ */
+export interface WholesaleInquiriesSelect<T extends boolean = true> {
+  company?: T;
+  contactName?: T;
+  email?: T;
+  phone?: T;
+  volume?: T;
+  message?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates_select".
+ */
+export interface EmailTemplatesSelect<T extends boolean = true> {
+  key?: T;
+  subject?: T;
+  body?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -284,6 +2056,38 @@ export interface MediaSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -319,6 +2123,800 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName?: string | null;
+  logo?: (number | null) | Media;
+  favicon?: (number | null) | Media;
+  tagline?: string | null;
+  ticker?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  instagramHandle?: string | null;
+  socials?:
+    | {
+        platform: 'instagram' | 'whatsapp' | 'tiktok' | 'facebook' | 'youtube' | 'x';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
+  };
+  address?: string | null;
+  coordinates?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  openingHours?: {
+    summary?: string | null;
+    items?:
+      | {
+          days: string;
+          hours: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  wholesaleNote?: string | null;
+  copyright?: string | null;
+  seoDefaults?: {
+    title?: string | null;
+    description?: string | null;
+    image?: (number | null) | Media;
+  };
+  analytics?: {
+    provider?: ('none' | 'ga4' | 'plausible' | 'umami') | null;
+    measurementId?: string | null;
+  };
+  cookieBanner?: {
+    enabled?: boolean | null;
+    text?: string | null;
+    acceptLabel?: string | null;
+    declineLabel?: string | null;
+    policyLink?: string | null;
+  };
+  /**
+   * Aturan ongkir saja; subtotal dihitung server dari harga Loyverse.
+   */
+  freeShipping?: {
+    enabled?: boolean | null;
+    threshold?: number | null;
+  };
+  /**
+   * Teks saja. Tarif pajak berasal dari Loyverse.
+   */
+  taxNote?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcement".
+ */
+export interface Announcement {
+  id: number;
+  enabled?: boolean | null;
+  text?: string | null;
+  ctaLabel?: string | null;
+  /**
+   * Path atau URL, mis. /products
+   */
+  ctaLink?: string | null;
+  tone?: ('dark' | 'light') | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  main?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  footerLinks?:
+    | {
+        label: string;
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  infoColumns?:
+    | {
+        heading: string;
+        links?:
+          | {
+              label: string;
+              href: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  /**
+   * Kosong → pakai logo site-settings
+   */
+  logo?: (number | null) | Media;
+  slogan?: string | null;
+  marqueeText?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home".
+ */
+export interface Home {
+  id: number;
+  hero?: {
+    enabled?: boolean | null;
+    background?: (number | null) | Media;
+    mark?: (number | null) | Media;
+    intro?: string | null;
+    stats?:
+      | {
+          value: string;
+          label: string;
+          id?: string | null;
+        }[]
+      | null;
+    chat?: {
+      enabled?: boolean | null;
+      /**
+       * Link WhatsApp
+       */
+      href?: string | null;
+      label?: string | null;
+    };
+  };
+  sector?: {
+    enabled?: boolean | null;
+    title?: string | null;
+    /**
+     * Urutan kolom. Lencana kosong → pakai lencana kategori.
+     */
+    columns?:
+      | {
+          category: number | ProductCategory;
+          badge?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  featured?: {
+    enabled?: boolean | null;
+    title?: string | null;
+    subtitle?: string | null;
+    cta?: {
+      label?: string | null;
+      href?: string | null;
+    };
+    products?: (number | Product)[] | null;
+  };
+  roots?: {
+    enabled?: boolean | null;
+    title?: string | null;
+    lead?: string | null;
+    body?: string | null;
+    photo?: (number | null) | Media;
+    /**
+     * Penimpa. Kosong → pakai site-settings.
+     */
+    visit?: {
+      title?: string | null;
+      address?: string | null;
+      hours?: string | null;
+      openLabel?: string | null;
+    };
+  };
+  places?: {
+    map?: (number | null) | Media;
+    shop?: (number | null) | Media;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about".
+ */
+export interface About {
+  id: number;
+  masthead?: {
+    title?: string | null;
+    background?: (number | null) | Media;
+  };
+  intro?: {
+    heading?: string | null;
+    subheading?: string | null;
+    body?: string | null;
+  };
+  /**
+   * Tepat 4 foto
+   */
+  photos?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  story?: {
+    title?: string | null;
+    body?: string | null;
+  };
+  philosophy?: {
+    title?: string | null;
+    body?: string | null;
+  };
+  band?: {
+    image?: (number | null) | Media;
+  };
+  showFeatured?: boolean | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery".
+ */
+export interface Gallery {
+  id: number;
+  title?: string | null;
+  /**
+   * Urutan = urutan tampil. Jumlah foto bebas (opsi B).
+   */
+  items?:
+    | {
+        image: number | Media;
+        size?: ('small' | 'wide' | 'tall' | 'large') | null;
+        id?: string | null;
+      }[]
+    | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news-page".
+ */
+export interface NewsPage {
+  id: number;
+  title?: string | null;
+  /**
+   * Kosong → artikel terbaru yang featured
+   */
+  headline?: (number | null) | Article;
+  /**
+   * Kosong → 4 artikel terbaru berikutnya
+   */
+  headlineRelated?: (number | Article)[] | null;
+  headlineBarText?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faq-page".
+ */
+export interface FaqPage {
+  id: number;
+  title?: string | null;
+  intro?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page".
+ */
+export interface ContactPage {
+  id: number;
+  title?: string | null;
+  intro?: string | null;
+  showMap?: boolean | null;
+  showForm?: boolean | null;
+  formSuccessMessage?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-strings".
+ */
+export interface UiString {
+  id: number;
+  /**
+   * Satu baris per teks. `key` dipakai frontend; jangan diubah sembarangan.
+   */
+  strings?:
+    | {
+        key: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations".
+ */
+export interface Integration {
+  id: number;
+  loyverse?: {
+    /**
+     * Toko Loyverse yang stoknya dipakai untuk penjualan online. Kosong → env LOYVERSE_STORE_ID.
+     */
+    storeId?: string | null;
+    /**
+     * Jenis pembayaran untuk receipt online (Fase 2).
+     */
+    paymentTypeId?: string | null;
+    lowStockThreshold?: number | null;
+    lastFullSyncAt?: string | null;
+    lastError?: string | null;
+    lastSummary?: string | null;
+    unprofiled?:
+      | {
+          itemId?: string | null;
+          name?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  logo?: T;
+  favicon?: T;
+  tagline?: T;
+  ticker?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  instagramHandle?: T;
+  socials?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  contact?:
+    | T
+    | {
+        email?: T;
+        phone?: T;
+        whatsapp?: T;
+      };
+  address?: T;
+  coordinates?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  openingHours?:
+    | T
+    | {
+        summary?: T;
+        items?:
+          | T
+          | {
+              days?: T;
+              hours?: T;
+              id?: T;
+            };
+      };
+  wholesaleNote?: T;
+  copyright?: T;
+  seoDefaults?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
+  analytics?:
+    | T
+    | {
+        provider?: T;
+        measurementId?: T;
+      };
+  cookieBanner?:
+    | T
+    | {
+        enabled?: T;
+        text?: T;
+        acceptLabel?: T;
+        declineLabel?: T;
+        policyLink?: T;
+      };
+  freeShipping?:
+    | T
+    | {
+        enabled?: T;
+        threshold?: T;
+      };
+  taxNote?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "announcement_select".
+ */
+export interface AnnouncementSelect<T extends boolean = true> {
+  enabled?: T;
+  text?: T;
+  ctaLabel?: T;
+  ctaLink?: T;
+  tone?: T;
+  startAt?: T;
+  endAt?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation_select".
+ */
+export interface NavigationSelect<T extends boolean = true> {
+  main?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  footerLinks?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  infoColumns?:
+    | T
+    | {
+        heading?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  logo?: T;
+  slogan?: T;
+  marqueeText?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home_select".
+ */
+export interface HomeSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        enabled?: T;
+        background?: T;
+        mark?: T;
+        intro?: T;
+        stats?:
+          | T
+          | {
+              value?: T;
+              label?: T;
+              id?: T;
+            };
+        chat?:
+          | T
+          | {
+              enabled?: T;
+              href?: T;
+              label?: T;
+            };
+      };
+  sector?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        columns?:
+          | T
+          | {
+              category?: T;
+              badge?: T;
+              id?: T;
+            };
+      };
+  featured?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        subtitle?: T;
+        cta?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+            };
+        products?: T;
+      };
+  roots?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        lead?: T;
+        body?: T;
+        photo?: T;
+        visit?:
+          | T
+          | {
+              title?: T;
+              address?: T;
+              hours?: T;
+              openLabel?: T;
+            };
+      };
+  places?:
+    | T
+    | {
+        map?: T;
+        shop?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about_select".
+ */
+export interface AboutSelect<T extends boolean = true> {
+  masthead?:
+    | T
+    | {
+        title?: T;
+        background?: T;
+      };
+  intro?:
+    | T
+    | {
+        heading?: T;
+        subheading?: T;
+        body?: T;
+      };
+  photos?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  story?:
+    | T
+    | {
+        title?: T;
+        body?: T;
+      };
+  philosophy?:
+    | T
+    | {
+        title?: T;
+        body?: T;
+      };
+  band?:
+    | T
+    | {
+        image?: T;
+      };
+  showFeatured?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery_select".
+ */
+export interface GallerySelect<T extends boolean = true> {
+  title?: T;
+  items?:
+    | T
+    | {
+        image?: T;
+        size?: T;
+        id?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news-page_select".
+ */
+export interface NewsPageSelect<T extends boolean = true> {
+  title?: T;
+  headline?: T;
+  headlineRelated?: T;
+  headlineBarText?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faq-page_select".
+ */
+export interface FaqPageSelect<T extends boolean = true> {
+  title?: T;
+  intro?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page_select".
+ */
+export interface ContactPageSelect<T extends boolean = true> {
+  title?: T;
+  intro?: T;
+  showMap?: T;
+  showForm?: T;
+  formSuccessMessage?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-strings_select".
+ */
+export interface UiStringsSelect<T extends boolean = true> {
+  strings?:
+    | T
+    | {
+        key?: T;
+        value?: T;
+        id?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integrations_select".
+ */
+export interface IntegrationsSelect<T extends boolean = true> {
+  loyverse?:
+    | T
+    | {
+        storeId?: T;
+        paymentTypeId?: T;
+        lowStockThreshold?: T;
+        lastFullSyncAt?: T;
+        lastError?: T;
+        lastSummary?: T;
+        unprofiled?:
+          | T
+          | {
+              itemId?: T;
+              name?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -326,6 +2924,22 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskLoyverse-sync".
+ */
+export interface TaskLoyverseSync {
+  input?: unknown;
+  output?: unknown;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskExpire-orders".
+ */
+export interface TaskExpireOrders {
+  input?: unknown;
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
