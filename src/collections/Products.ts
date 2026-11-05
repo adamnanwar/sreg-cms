@@ -124,7 +124,27 @@ export const Products: CollectionConfig = {
         },
       ],
     },
-    { name: 'weightGrams', type: 'number', min: 0, admin: { position: 'sidebar', description: 'Untuk ongkir (Fase 2)' } },
+    { name: 'weightGrams', type: 'number', min: 0, admin: { position: 'sidebar', description: 'Berat per unit (gram) untuk ongkir. Dipakai bila varian tidak punya berat sendiri.' } },
+    {
+      name: 'variantWeights',
+      type: 'array',
+      admin: { description: 'Berat per varian (gram), mis. 250 g dan 1 kg. Kosong → berat produk.' },
+      fields: [
+        { name: 'variantId', type: 'text', required: true },
+        { name: 'weightGrams', type: 'number', required: true, min: 1 },
+      ],
+    },
+    {
+      // Hanya untuk pengiriman internasional (FedEx).
+      name: 'customs',
+      type: 'group',
+      admin: { description: 'Data bea cukai untuk pengiriman internasional.' },
+      fields: [
+        { name: 'description', type: 'text', admin: { description: 'Deskripsi barang dalam bahasa Inggris, mis. Roasted coffee beans' } },
+        { name: 'hsCode', type: 'text', admin: { description: 'Kode HS, mis. 0901.21' } },
+        { name: 'countryOfOrigin', type: 'text', defaultValue: 'ID', maxLength: 2, admin: { description: 'Kode negara ISO-2' } },
+      ],
+    },
     { name: 'hidden', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar', description: 'Sembunyikan dari web walau terbit.' } },
     { name: 'isNew', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
     { name: 'featuredRank', type: 'number', admin: { position: 'sidebar' } },

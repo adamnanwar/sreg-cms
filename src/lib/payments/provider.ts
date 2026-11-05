@@ -1,5 +1,7 @@
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto'
 
+import { xenditProvider } from './xendit'
+
 export type PaymentMethodType = 'card' | 'virtual_account' | 'qris' | 'ewallet'
 
 export type CreatePaymentInput = {
@@ -9,12 +11,16 @@ export type CreatePaymentInput = {
   methodType: PaymentMethodType
   customer: { email: string; name: string }
   expiresAt: Date
+  /** Halaman frontend tujuan setelah pembeli selesai di halaman bayar gateway. */
+  returnUrl?: string
 }
 
 export type PaymentWebhookEvent = {
   providerRef?: string
   orderNumber?: string
-  status: 'paid' | 'expired' | 'failed'
+  status: 'paid' | 'expired' | 'failed' | 'refunded'
+  /** Jumlah yang dikembalikan (hanya untuk `refunded`). */
+  amount?: number
 }
 
 /**
@@ -27,6 +33,8 @@ export interface PaymentProvider {
   createPayment(input: CreatePaymentInput): Promise<{ providerRef: string; instructions: Record<string, unknown> }>
   /** Verifikasi tanda tangan lalu ubah payload gateway menjadi peristiwa seragam. */
   parseWebhook(rawBody: string, headers: Headers): { event: PaymentWebhookEvent } | { error: string }
+  /** Tutup tagihan yang belum dibayar (pesanan dibatalkan). Opsional; kegagalan tidak fatal. */
+  cancelPayment?(providerRef: string): Promise<void>
 }
 
 const frontend = () => (process.env.FRONTEND_ORIGIN || 'http://localhost:4321').replace(/\/$/, '')
@@ -86,8 +94,13 @@ export const mockProvider: PaymentProvider = {
 export function getProvider(): PaymentProvider | null {
   const id = process.env.PAYMENT_PROVIDER || (process.env.NODE_ENV === 'production' ? '' : 'mock')
   if (id === 'mock') return mockProvider
+  if (id === 'xendit') return xenditProvider
   return null
 }
+
+/** Penyedia menurut nama yang tersimpan di pesanan (bukan penyedia aktif sekarang), untuk refund/pembatalan. */
+export const providerByName = (id: string | null | undefined): PaymentProvider | null =>
+  id === 'xendit' ? xenditProvider : id === 'mock' ? mockProvider : null
 
 export const providerById = (id: string): PaymentProvider | null => {
   const p = getProvider()

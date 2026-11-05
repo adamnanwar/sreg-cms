@@ -7,6 +7,8 @@ import { frontendUrl, sendTemplateEmail } from '../lib/email/send'
 import { ApiError, customerOf, email, handle, isHoneypotTripped, rateLimit, readJson, str } from '../lib/http'
 import { applyPaymentEvent } from '../lib/payments/apply'
 import { getProvider, providerById } from '../lib/payments/provider'
+import { getRates, isProviderRateId, parseDestination, resolveRate } from '../lib/shipping'
+import { searchAreas } from '../lib/shipping/biteship'
 
 const MIN = 60_000
 const accepted = () => Response.json({ ok: true }, { status: 202 })
@@ -32,14 +34,47 @@ const quote: Endpoint = {
   handler: handle(async (req) => {
     rateLimit(req, 'quote', 120, 10 * MIN)
     const b = await readJson(req)
-    const q = await buildQuote(req.payload, {
-      items: b.items as never,
-      shippingId: typeof b.shippingId === 'string' ? b.shippingId : undefined,
-      paymentId: typeof b.paymentId === 'string' ? b.paymentId : undefined,
-      discountCode: typeof b.discountCode === 'string' && b.discountCode ? b.discountCode : undefined,
-      locale: b.locale === 'id' ? 'id' : 'en',
-    })
+    const shippingId = typeof b.shippingId === 'string' ? b.shippingId : undefined
+    const shippingOverride = isProviderRateId(shippingId)
+      ? await resolveRate(req.payload, { items: Array.isArray(b.items) ? (b.items as never) : [], shippingId: shippingId!, destination: parseDestination(b.destination) })
+      : undefined
+    const q = await buildQuote(
+      req.payload,
+      {
+        items: b.items as never,
+        shippingId,
+        paymentId: typeof b.paymentId === 'string' ? b.paymentId : undefined,
+        discountCode: typeof b.discountCode === 'string' && b.discountCode ? b.discountCode : undefined,
+        locale: b.locale === 'id' ? 'id' : 'en',
+      },
+      { shippingOverride },
+    )
     return Response.json(publicQuote(q))
+  }),
+}
+
+// ---- Ongkir (Biteship untuk Indonesia, FedEx untuk luar negeri) ----
+const shippingRates: Endpoint = {
+  path: '/shipping/rates',
+  method: 'post',
+  handler: handle(async (req) => {
+    rateLimit(req, 'shipping-rates', 60, 10 * MIN)
+    const b = await readJson(req)
+    const rates = await getRates(req.payload, { items: Array.isArray(b.items) ? (b.items as never) : [], destination: parseDestination(b.destination) })
+    return Response.json({ rates: rates.map(({ id, provider, courier, service, name, price, etaDays }) => ({ id, provider, courier, service, name, price, etaDays })) })
+  }),
+}
+
+/** Pencarian area (kelurahan/kecamatan + kode pos) untuk alamat dalam negeri. */
+const shippingAreas: Endpoint = {
+  path: '/shipping/areas',
+  method: 'get',
+  handler: handle(async (req) => {
+    rateLimit(req, 'shipping-areas', 120, 10 * MIN)
+    const q = (req.searchParams.get('q') ?? '').trim().slice(0, 80)
+    if (q.length < 3) return Response.json({ areas: [] })
+    const areas = await searchAreas(q)
+    return Response.json({ areas: areas.slice(0, 20).map((a) => ({ id: a.id, name: a.name, postalCode: a.postal_code != null ? String(a.postal_code) : undefined })) })
   }),
 }
 
@@ -58,12 +93,15 @@ const paymentWebhook: Endpoint = {
   }),
 }
 
-/** Hanya dev/staging dengan penyedia tiruan: menggantikan tombol "Simulate payment" di frontend. */
+/**
+ * Hanya dev/staging dengan penyedia tiruan: menggantikan tombol "Simulate payment" di frontend.
+ * Di build produksi (server dev di VPS) harus dibuka eksplisit dengan ALLOW_MOCK_SIMULATE=1.
+ */
 const mockSimulate: Endpoint = {
   path: '/payments/mock/simulate',
   method: 'post',
   handler: handle(async (req) => {
-    if (process.env.NODE_ENV === 'production' || getProvider()?.id !== 'mock') throw new ApiError(404, 'not_found', 'Tidak tersedia.')
+    if ((process.env.NODE_ENV === 'production' && process.env.ALLOW_MOCK_SIMULATE !== '1') || getProvider()?.id !== 'mock') throw new ApiError(404, 'not_found', 'Tidak tersedia.')
     rateLimit(req, 'mock-pay', 30, 10 * MIN)
     const b = await readJson(req)
     const order = await findOrderByNumber(req, str(b, 'orderNumber', { required: true }))
@@ -297,6 +335,8 @@ const lookupReturns: Endpoint = {
 
 export const publicEndpoints: Endpoint[] = [
   quote,
+  shippingRates,
+  shippingAreas,
   paymentWebhook,
   mockSimulate,
   contact,

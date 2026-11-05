@@ -19,6 +19,7 @@ export const Articles: CollectionConfig = {
   fields: [
     slugField(),
     { name: 'title', type: 'text', required: true, localized: true },
+    { name: 'category', type: 'text', localized: true, admin: { position: 'sidebar', description: 'Label kecil di atas judul, mis. ROASTERY' } },
     { name: 'excerpt', type: 'textarea', localized: true },
     { name: 'body', type: 'richText', localized: true },
     { name: 'image', type: 'upload', relationTo: 'media' },

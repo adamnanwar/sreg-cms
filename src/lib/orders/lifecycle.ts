@@ -3,6 +3,7 @@ import { APIError, type CollectionAfterChangeHook, type Payload, type PayloadReq
 import type { Order } from '../../payload-types'
 import { frontendUrl, sendTemplateEmail } from '../email/send'
 import { ApiError } from '../http'
+import { closePendingPayment, notifyRefundNeeded } from '../payments/refund'
 
 type Status = Order['status']
 
@@ -12,8 +13,9 @@ const ALLOWED: Record<Status, Status[]> = {
   processing: ['shipped', 'cancelled', 'refunded'],
   shipped: ['delivered', 'refunded'],
   delivered: ['refunded'],
-  cancelled: [],
-  expired: [],
+  // Pesanan berbayar yang dibatalkan/kedaluwarsa menunggu refund manual di gateway, lalu menjadi refunded.
+  cancelled: ['refunded'],
+  expired: ['refunded'],
   refunded: [],
 }
 
@@ -81,20 +83,24 @@ export const onOrderStatusChange: CollectionAfterChangeHook<Order> = async ({ do
       await releaseDiscount(payload, doc, req)
       if (previousDoc.status === 'paid' || previousDoc.status === 'processing') {
         await payload.db.updateOne({ collection: 'orders', id: doc.id, data: { needsRefund: true }, req })
+        await notifyRefundNeeded(payload, doc, 'Pesanan sudah dibayar lalu dibatalkan.')
+      } else if (previousDoc.status === 'awaiting_payment' && doc.status === 'cancelled') {
+        await closePendingPayment(payload, doc)
       }
       if (doc.status === 'cancelled') await sendTemplateEmail(payload, 'cancelled', to, emailVars(doc), locale)
       break
     case 'refunded':
       await setReservationStatus(payload, doc.id, ['active', 'committed'], 'released', req)
+      await payload.db.updateOne({ collection: 'orders', id: doc.id, data: { needsRefund: false }, req })
       break
   }
   return doc
 }
 
-/** Pembatalan oleh pelanggan: hanya selama belum diproses. */
+/** Pembatalan oleh pelanggan: hanya sebelum dibayar. Setelah dibayar, dibatalkan lewat admin lalu refund manual. */
 export async function cancelOrder(payload: Payload, order: Order): Promise<Order> {
-  if (order.status !== 'awaiting_payment' && order.status !== 'paid') {
-    throw new ApiError(409, 'cannot_cancel', 'Pesanan tidak bisa dibatalkan pada status ini.')
+  if (order.status !== 'awaiting_payment') {
+    throw new ApiError(409, 'cannot_cancel', 'Pesanan tidak bisa dibatalkan pada status ini. Hubungi kami bila sudah dibayar.')
   }
   return payload.update({ collection: 'orders', id: order.id, data: { status: 'cancelled' }, depth: 0 })
 }

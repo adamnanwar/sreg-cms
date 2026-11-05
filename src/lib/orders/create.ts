@@ -7,6 +7,8 @@ import { frontendUrl, sendTemplateEmail } from '../email/send'
 import { ApiError, str } from '../http'
 import { loyverse } from '../loyverse/client'
 import { getProvider } from '../payments/provider'
+import { isProviderRateId, resolveRate } from '../shipping'
+import { isDomestic } from '../shipping/types'
 import { cancelOrder } from './lifecycle'
 import { withLock } from './mutex'
 import { serializeOrder } from './serialize'
@@ -15,16 +17,20 @@ const EXPIRY_HOURS = Number(process.env.ORDER_EXPIRY_HOURS) || 24
 
 type Address = NonNullable<Order['address']>
 
-const ADDRESS_REQUIRED = ['firstName', 'phone', 'street', 'province', 'city', 'district', 'postalCode'] as const
+// Indonesia: provinsi dan kecamatan wajib. Luar negeri: cukup kota, kode pos, dan negara.
+const ADDRESS_REQUIRED_ID = ['firstName', 'phone', 'street', 'province', 'city', 'district', 'postalCode'] as const
+const ADDRESS_REQUIRED_INTL = ['firstName', 'phone', 'street', 'city', 'postalCode'] as const
 
 function parseAddress(raw: unknown): Address {
   const a = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
   const fields: Record<string, string> = {}
   const out: Record<string, string> = {}
-  for (const k of [...ADDRESS_REQUIRED, 'lastName', 'country', 'address2']) {
+  const country = typeof a.country === 'string' && a.country.trim() ? a.country.trim() : 'Indonesia'
+  const required: readonly string[] = isDomestic(country) ? ADDRESS_REQUIRED_ID : ADDRESS_REQUIRED_INTL
+  for (const k of ['firstName', 'phone', 'street', 'province', 'city', 'district', 'postalCode', 'lastName', 'country', 'address2']) {
     const v = typeof a[k] === 'string' ? (a[k] as string).trim().slice(0, 200) : ''
     out[k] = v
-    if (!v && (ADDRESS_REQUIRED as readonly string[]).includes(k)) fields[`address.${k}`] = 'Wajib diisi'
+    if (!v && required.includes(k)) fields[`address.${k}`] = 'Wajib diisi'
   }
   if (Object.keys(fields).length) throw new ApiError(422, 'validation_error', 'Alamat tidak lengkap.', fields)
   return { ...out, country: out.country || 'Indonesia' } as Address
@@ -87,6 +93,15 @@ export async function createOrder(
   const liveStock = await fetchLiveStock(payload)
   const items = (Array.isArray(body.items) ? body.items : []) as QuoteItemInput[]
 
+  // Tarif penyedia dihitung di sini, di luar kunci dan transaksi: panggilan jaringan tidak boleh menahan keduanya.
+  const shippingOverride = isProviderRateId(shippingId)
+    ? await resolveRate(payload, {
+        items,
+        shippingId,
+        destination: { country: address.country || 'Indonesia', postalCode: address.postalCode ?? undefined, city: address.city ?? undefined, province: address.province ?? undefined },
+      })
+    : undefined
+
   // ---- Cek stok + buat pesanan + reservasi dalam satu transaksi, serial ----
   const req = await createLocalReq({}, payload)
   const expiresAt = new Date(Date.now() + EXPIRY_HOURS * 3600_000)
@@ -103,7 +118,7 @@ export async function createOrder(
         }
       }
 
-      const quote: Quote = await buildQuote(payload, { items, shippingId, paymentId, discountCode: discountCode || undefined, locale: lang }, { liveStock, req })
+      const quote: Quote = await buildQuote(payload, { items, shippingId, paymentId, discountCode: discountCode || undefined, locale: lang }, { liveStock, req, shippingOverride })
       if (!quote.shipping || !quote.paymentMethod) throw new ApiError(422, 'validation_error', 'Pengiriman/pembayaran wajib.')
 
       let orderNumber = makeOrderNumber()
@@ -191,6 +206,7 @@ export async function createOrder(
       methodType,
       customer: { email: contactEmail, name: [address.firstName, address.lastName].filter(Boolean).join(' ') },
       expiresAt,
+      returnUrl: frontendUrl(`/order/${order.orderNumber}${order.guestToken ? `?token=${order.guestToken}` : ''}`),
     })
     order = await payload.update({
       collection: 'orders',

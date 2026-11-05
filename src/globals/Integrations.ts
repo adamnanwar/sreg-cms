@@ -11,6 +11,22 @@ export const Integrations: GlobalConfig = {
   access: { read: isAdmin, update: isAdmin },
   fields: [
     {
+      // Kunci API (BITESHIP_API_KEY, FEDEX_*) tetap di env, bukan di sini.
+      name: 'shipping',
+      type: 'group',
+      admin: { description: 'Alamat asal dan aturan hitung ongkir. Biteship untuk tujuan Indonesia, FedEx untuk luar negeri.' },
+      fields: [
+        { name: 'originName', type: 'text', label: 'Nama kontak pengirim' },
+        { name: 'originPhone', type: 'text', label: 'Telepon pengirim' },
+        { name: 'originAddress', type: 'textarea', label: 'Alamat asal' },
+        { name: 'originPostalCode', type: 'text', label: 'Kode pos asal', admin: { description: 'Wajib bila ID area kosong.' } },
+        { name: 'originAreaId', type: 'text', label: 'ID area Biteship asal', admin: { description: 'Opsional, lebih akurat daripada kode pos.' } },
+        { name: 'couriers', type: 'text', defaultValue: 'jne,sicepat,anteraja', admin: { description: 'Kode kurir Biteship dipisah koma, mis. jne,sicepat,anteraja,gojek' } },
+        { name: 'packagingGrams', type: 'number', defaultValue: 100, min: 0, label: 'Berat kemasan (g)', admin: { description: 'Ditambahkan ke berat total tiap paket.' } },
+        { name: 'defaultItemGrams', type: 'number', defaultValue: 250, min: 1, label: 'Berat bawaan per item (g)', admin: { description: 'Dipakai bila produk/varian belum punya berat.' } },
+      ],
+    },
+    {
       name: 'loyverse',
       type: 'group',
       fields: [

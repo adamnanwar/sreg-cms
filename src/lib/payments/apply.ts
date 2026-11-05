@@ -1,6 +1,7 @@
 import type { Payload, Where } from 'payload'
 
 import type { Order } from '../../payload-types'
+import { notifyRefundNeeded } from './refund'
 import type { PaymentWebhookEvent } from './provider'
 
 export async function findOrderForEvent(payload: Payload, event: PaymentWebhookEvent): Promise<Order | null> {
@@ -27,7 +28,7 @@ export async function applyPaymentEvent(payload: Payload, event: PaymentWebhookE
     }
     if (order.status === 'expired' || order.status === 'cancelled') {
       // Pembayaran telat: uang masuk tetapi pesanan sudah tutup. Tandai untuk refund manual.
-      await payload.update({
+      const flagged = await payload.update({
         collection: 'orders',
         id: order.id,
         depth: 0,
@@ -36,9 +37,23 @@ export async function applyPaymentEvent(payload: Payload, event: PaymentWebhookE
           internalNotes: [order.internalNotes, `[${new Date().toISOString()}] Pembayaran diterima setelah pesanan ${order.status}. Perlu refund.`].filter(Boolean).join('\n'),
         },
       })
+      await notifyRefundNeeded(payload, flagged, `Pembayaran diterima setelah pesanan ${order.status}.`)
       return 'applied'
     }
     return 'ignored'
+  }
+
+  if (event.status === 'refunded') {
+    const refundable: Order['status'][] = ['paid', 'processing', 'shipped', 'delivered', 'cancelled', 'expired']
+    if (!refundable.includes(order.status)) return 'ignored'
+    const note = (line: string) => [order.internalNotes, `[${new Date().toISOString()}] ${line}`].filter(Boolean).join('\n')
+    if (event.amount !== undefined && event.amount < order.total) {
+      // Refund sebagian: hanya dicatat, status tetap (admin menentukan).
+      await payload.update({ collection: 'orders', id: order.id, data: { internalNotes: note(`Refund sebagian Rp${event.amount} dari Rp${order.total} tercatat dari gateway.`) }, depth: 0 })
+      return 'applied'
+    }
+    await payload.update({ collection: 'orders', id: order.id, data: { status: 'refunded', needsRefund: false, internalNotes: note('Refund penuh dikonfirmasi gateway.') }, depth: 0 })
+    return 'applied'
   }
 
   if (event.status === 'expired' && order.status === 'awaiting_payment') {

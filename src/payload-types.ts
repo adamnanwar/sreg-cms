@@ -429,9 +429,36 @@ export interface Product {
       | null;
   };
   /**
-   * Untuk ongkir (Fase 2)
+   * Berat per unit (gram) untuk ongkir. Dipakai bila varian tidak punya berat sendiri.
    */
   weightGrams?: number | null;
+  /**
+   * Berat per varian (gram), mis. 250 g dan 1 kg. Kosong → berat produk.
+   */
+  variantWeights?:
+    | {
+        variantId: string;
+        weightGrams: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Data bea cukai untuk pengiriman internasional.
+   */
+  customs?: {
+    /**
+     * Deskripsi barang dalam bahasa Inggris, mis. Roasted coffee beans
+     */
+    description?: string | null;
+    /**
+     * Kode HS, mis. 0901.21
+     */
+    hsCode?: string | null;
+    /**
+     * Kode negara ISO-2
+     */
+    countryOfOrigin?: string | null;
+  };
   /**
    * Sembunyikan dari web walau terbit.
    */
@@ -523,6 +550,10 @@ export interface Article {
    */
   slug: string;
   title: string;
+  /**
+   * Label kecil di atas judul, mis. ROASTERY
+   */
+  category?: string | null;
   excerpt?: string | null;
   body?: {
     root: {
@@ -642,9 +673,9 @@ export interface Customer {
         country?: string | null;
         street: string;
         address2?: string | null;
-        province: string;
+        province?: string | null;
         city: string;
-        district: string;
+        district?: string | null;
         postalCode: string;
         isDefault?: boolean | null;
         id?: string | null;
@@ -838,9 +869,9 @@ export interface Order {
     country?: string | null;
     street: string;
     address2?: string | null;
-    province: string;
+    province?: string | null;
     city: string;
-    district: string;
+    district?: string | null;
     postalCode: string;
   };
   note?: string | null;
@@ -1546,6 +1577,20 @@ export interface ProductsSelect<T extends boolean = true> {
             };
       };
   weightGrams?: T;
+  variantWeights?:
+    | T
+    | {
+        variantId?: T;
+        weightGrams?: T;
+        id?: T;
+      };
+  customs?:
+    | T
+    | {
+        description?: T;
+        hsCode?: T;
+        countryOfOrigin?: T;
+      };
   hidden?: T;
   isNew?: T;
   featuredRank?: T;
@@ -1613,6 +1658,7 @@ export interface LoyverseItemsSelect<T extends boolean = true> {
 export interface ArticlesSelect<T extends boolean = true> {
   slug?: T;
   title?: T;
+  category?: T;
   excerpt?: T;
   body?: T;
   image?: T;
@@ -2480,6 +2526,34 @@ export interface UiString {
  */
 export interface Integration {
   id: number;
+  /**
+   * Alamat asal dan aturan hitung ongkir. Biteship untuk tujuan Indonesia, FedEx untuk luar negeri.
+   */
+  shipping?: {
+    originName?: string | null;
+    originPhone?: string | null;
+    originAddress?: string | null;
+    /**
+     * Wajib bila ID area kosong.
+     */
+    originPostalCode?: string | null;
+    /**
+     * Opsional, lebih akurat daripada kode pos.
+     */
+    originAreaId?: string | null;
+    /**
+     * Kode kurir Biteship dipisah koma, mis. jne,sicepat,anteraja,gojek
+     */
+    couriers?: string | null;
+    /**
+     * Ditambahkan ke berat total tiap paket.
+     */
+    packagingGrams?: number | null;
+    /**
+     * Dipakai bila produk/varian belum punya berat.
+     */
+    defaultItemGrams?: number | null;
+  };
   loyverse?: {
     /**
      * Toko Loyverse yang stoknya dipakai untuk penjualan online. Kosong → env LOYVERSE_STORE_ID.
@@ -2884,6 +2958,18 @@ export interface UiStringsSelect<T extends boolean = true> {
  * via the `definition` "integrations_select".
  */
 export interface IntegrationsSelect<T extends boolean = true> {
+  shipping?:
+    | T
+    | {
+        originName?: T;
+        originPhone?: T;
+        originAddress?: T;
+        originPostalCode?: T;
+        originAreaId?: T;
+        couriers?: T;
+        packagingGrams?: T;
+        defaultItemGrams?: T;
+      };
   loyverse?:
     | T
     | {

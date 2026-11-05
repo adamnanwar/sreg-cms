@@ -137,9 +137,10 @@ export const Orders: CollectionConfig = {
         { name: 'country', type: 'text', defaultValue: 'Indonesia' },
         { name: 'street', type: 'text', required: true },
         { name: 'address2', type: 'text' },
-        { name: 'province', type: 'text', required: true },
+        // Provinsi/kecamatan wajib hanya untuk Indonesia (divalidasi di parseAddress).
+        { name: 'province', type: 'text' },
         { name: 'city', type: 'text', required: true },
-        { name: 'district', type: 'text', required: true },
+        { name: 'district', type: 'text' },
         { name: 'postalCode', type: 'text', required: true },
       ],
     },

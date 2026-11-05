@@ -1,6 +1,6 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import path from 'path'
@@ -44,8 +44,11 @@ const dirname = path.dirname(filename)
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN,
   process.env.NEXT_PUBLIC_SERVER_URL,
+  ...(process.env.EXTRA_ORIGINS ?? '').split(','), // origin tambahan, pisah koma
   'http://localhost:4321',
-].filter((o): o is string => Boolean(o))
+]
+  .map((o) => o?.trim())
+  .filter((o): o is string => Boolean(o))
 
 /** Path di frontend untuk Live Preview. */
 const previewPaths: Record<string, (doc: { slug?: string }) => string> = {
@@ -127,9 +130,16 @@ export default buildConfig({
         }),
       }
     : {}),
-  editor: lexicalEditor(),
+  // Frontend hanya merender H2-H6, daftar, kutipan, link, gambar, dan garis (lihat cms-news-notes.md): H1 dimatikan, fitur lain yang tak dirender dibuang.
+  editor: lexicalEditor({
+    features: ({ defaultFeatures }) => [
+      ...defaultFeatures.filter((f) => !['heading', 'checklist', 'relationship', 'align', 'indent'].includes(f.key)),
+      HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4', 'h5', 'h6'] }),
+    ],
+  }),
   secret: process.env.PAYLOAD_SECRET || '',
-  cors: allowedOrigins,
+  // Idempotency-Key dikirim frontend pada POST /orders/create; tanpa ini preflight browser menolaknya.
+  cors: { origins: allowedOrigins, headers: ['Idempotency-Key'] },
   csrf: allowedOrigins,
   localization: {
     locales: [

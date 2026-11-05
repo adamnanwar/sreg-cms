@@ -120,7 +120,8 @@ export async function syncLoyverse(payload: Payload): Promise<SyncResult> {
 
     for (const product of products.docs) {
       const itemId = product.loyverse?.itemId
-      if (!itemId) continue
+      // Produk contoh dari `pnpm seed` (SEED-...) tidak ada di Loyverse; jangan dinonaktifkan sinkron.
+      if (!itemId || itemId.startsWith('SEED-')) continue
       profiled.add(itemId)
 
       const item = byId.get(itemId)

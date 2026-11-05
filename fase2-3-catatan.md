@@ -32,7 +32,7 @@ Catatan sebelumnya ada di [fase1-catatan.md](fase1-catatan.md); isinya masih ber
 3. **Produksi tanpa `PAYMENT_PROVIDER` → membuat pesanan gagal dengan 503 `payment_unavailable`** (sengaja, agar mock tidak aktif tanpa sengaja). Dev/staging otomatis memakai mock. Webhook mock butuh `MOCK_PAYMENT_SECRET`.
 4. **Hanya aman untuk satu instance**: antrean serial stok (`src/lib/orders/mutex.ts`) dan rate limit ada di memori proses. Untuk multi-instance, ganti dengan `pg_advisory_xact_lock` dan penyimpanan rate limit bersama. Rate limit membaca `X-Forwarded-For`; pasang hanya di belakang proxy tepercaya.
 5. **`guestToken` tidak kedaluwarsa** (pertanyaan 7 belum dijawab). Nomor pesanan: 4 digit acak per hari; bila lebih dari ±5.000 pesanan/hari, perpanjang.
-6. **Membatalkan pesanan yang sudah dibayar diizinkan** (sesuai "selama belum processing"): status jadi `cancelled`, `needsRefund` dicentang. **Tidak ada refund otomatis ke gateway**; ops memprosesnya manual.
+6. ~~Membatalkan pesanan yang sudah dibayar diizinkan~~ (diganti: pelanggan hanya bisa membatalkan sebelum bayar; admin yang membatalkan pesanan berbayar): status jadi `cancelled`, `needsRefund` dicentang. **Tidak ada refund otomatis ke gateway**; ops memprosesnya manual.
 7. **Form publik tidak "create terbuka" di collection** seperti tertulis di `cms.md`: pembuatan hanya lewat endpoint (agar rate limit dan honeypot selalu berlaku).
 8. **Rute frontend yang saya asumsikan** untuk tautan di email: `/verify?token=`, `/reset-password?token=`, `/order/<nomor>?token=`, `/newsletter/confirm?token=`, `/products/<slug>`, `/mock-pay?order=`. Sesuaikan di [src/lib/email/send.ts](src/lib/email/send.ts) dan [src/lib/payments/provider.ts](src/lib/payments/provider.ts) bila beda.
 9. **Email**: tanpa `SMTP_HOST` email hanya dicatat di log. Verifikasi email wajib sebelum login, jadi SMTP harus siap sebelum pendaftaran dibuka. Template bahasa Indonesia belum ada (buat di admin).
@@ -67,3 +67,34 @@ Cara kerja (tiap sinkron, 5 menit sekali):
 4. Produk yang sudah ada sebelum fitur ini otomatis tercentang, jadi tidak hilang dari web.
 
 Catatan: setelah draf diterbitkan, harga/stok di cache bisa kosong sampai sinkron berikutnya (maks. 5 menit); wajar. Migrasi baru: `20261102_033612_loyverse_menu` (jalankan `pnpm payload migrate`).
+
+## Tambahan: ongkir Biteship (Indonesia) dan FedEx (luar negeri)
+
+Sudah ada:
+- `POST /api/shipping/rates` dan `GET /api/shipping/areas` ([src/lib/shipping/](src/lib/shipping/)). Tarif dihitung dari berat (berat varian, lalu berat produk, lalu bawaan, ditambah berat kemasan) dan kode pos tujuan.
+- `shippingId` bisa berupa `biteship:<kurir>:<layanan>`; server menghitung ulang tarif di `quote` dan saat membuat pesanan (di luar kunci stok dan transaksi). Metode tetap di `shipping-methods` tetap jalan sebagai cadangan.
+- Admin → Globals → Integrations → **Shipping**: alamat asal, kode kurir, berat kemasan, berat bawaan. Produk: `variantWeights` dan grup `customs` (deskripsi, kode HS, negara asal).
+- Alamat luar negeri tidak mewajibkan provinsi dan kecamatan. Migrasi: `20261103_122434_shipping`.
+
+**Belum diuji terhadap Biteship sungguhan** (tidak ada API key): bentuk respons tarif ditulis dari dokumentasi publik dan diuji dengan respons tiruan. Setelah `BITESHIP_API_KEY` terisi, jalankan satu permintaan tarif nyata dan bandingkan dengan dashboard Biteship. Bila nama field berbeda, perbaikannya hanya di [biteship.ts](src/lib/shipping/biteship.ts).
+
+Belum ada: booking kurir dan resi di Biteship setelah `paid`, webhook status kiriman (`order.status`, `order.waybill_id`, `order.price`), FedEx (butuh akun developer; saat ini selalu `503`), gratis ongkir untuk tarif penyedia (batas gratis ongkir hanya berlaku untuk metode tetap), dan biaya bea masuk (DDU/DDP belum diputuskan).
+
+## Seed lengkap dan field `articles.category`
+
+- `pnpm seed` kini mengisi data contoh lengkap (13 produk, 6 artikel, 3 halaman, 8 FAQ, ulasan, semua global, 12 foto galeri) dari `media/images`. Aman diulang; konten yang sudah ada tidak ditimpa, kecuali global dan produk contoh (`SEED-`/`PENDING-`).
+- Produk contoh memakai `loyverse.itemId = SEED-<slug>` dengan harga/stok palsu. Sinkron Loyverse melewati `SEED-*` ([sync.ts](src/lib/loyverse/sync.ts)). Sebelum rilis, hapus produk itu atau ganti `itemId` dengan ID Loyverse asli.
+- Akun uji: `demo@sregcoffee.test` / `Demo12345`. Hapus sebelum produksi.
+- Migrasi baru: `20261105_033408_articles_category` (kolom `category` pada artikel, per lokal). Jalankan `pnpm payload migrate` sebelum `pnpm seed`.
+- Editor Lexical: tanpa H1; checklist, relasi, rata teks, dan indentasi dimatikan (sesuai `cms-news-notes.md`).
+
+## Xendit (pembayaran)
+
+- Penyedia baru `xendit` ([xendit.ts](src/lib/payments/xendit.ts)), aktif bila `PAYMENT_PROVIDER=xendit`. Memakai **Xendit Invoice** (halaman bayar Xendit, dibuka frontend sebagai popup/tab). Kartu, VA, QRIS, e-wallet dibatasi sesuai jenis metode yang dipilih pembeli.
+- Webhook: `POST /api/payments/webhook/xendit`, diverifikasi header `x-callback-token` = `XENDIT_CALLBACK_TOKEN`. `PAID`/`SETTLED` → `paid`; `EXPIRED` → `expired`. Idempoten; pembayaran telat ditandai `needsRefund`.
+- Env: `XENDIT_SECRET_KEY`, `XENDIT_CALLBACK_TOKEN`. 39 tes lulus (3 baru). **Belum diuji ke Xendit sungguhan** (butuh kunci mode test).
+- Pesanan dibatalkan sebelum bayar → invoice di-expire di Xendit (`POST /invoices/{id}/expire!`, gagal = diabaikan).
+- **Refund 100% manual** dari dashboard Xendit; CMS tidak memanggil API refund. Alur: pelanggan hanya bisa membatalkan sebelum bayar → pesanan berbayar dibatalkan admin (`cancelled`, `needsRefund`) → **email ke semua user admin/ops** ([refund.ts](src/lib/payments/refund.ts)) → admin refund di dashboard Xendit → webhook `refund.succeeded` mengubah pesanan ke `refunded` dan mematikan `needsRefund`. Refund sebagian hanya dicatat di `internalNotes`. Pembayaran yang masuk setelah pesanan kedaluwarsa/dibatalkan juga memicu email + `needsRefund`.
+- Transisi baru: `cancelled → refunded` dan `expired → refunded`.
+- Perlu didaftarkan di dashboard Xendit: webhook refund (`refund.succeeded`) ke URL webhook yang sama. **Bentuk payload refund Xendit saya tulis dari pengetahuan sendiri dan belum diverifikasi**: pencocokan memakai `data.invoice_id` atau `data.reference_id`; cek di mode test.
+- 44 tes lulus.

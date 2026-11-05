@@ -1,4 +1,5 @@
 import type { Payload, PayloadRequest, Where } from 'payload'
+import type { ShippingRate } from '../shipping/types'
 
 import { ApiError } from '../http'
 
@@ -81,7 +82,7 @@ export async function reservedByVariant(
 export async function buildQuote(
   payload: Payload,
   input: QuoteInput,
-  opts: { liveStock?: Map<string, number | null>; req?: Partial<PayloadRequest> } = {},
+  opts: { liveStock?: Map<string, number | null>; req?: Partial<PayloadRequest>; shippingOverride?: ShippingRate } = {},
 ): Promise<Quote> {
   const locale = input.locale === 'id' ? 'id' : 'en'
   const req = opts.req as PayloadRequest | undefined
@@ -228,7 +229,14 @@ export async function buildQuote(
 
   // ---- Ongkir & pembayaran ----
   let shipping: Quote['shipping'] = null
-  if (input.shippingId) {
+  if (opts.shippingOverride) {
+    // Tarif penyedia (Biteship/FedEx) dihitung pemanggil di luar transaksi, lalu diteruskan ke sini.
+    const r = opts.shippingOverride
+    shipping = { id: r.id, name: r.name, price: r.price, etaDays: r.etaDays }
+  } else if (input.shippingId) {
+    if (/^(biteship|fedex):/.test(input.shippingId)) {
+      throw new ApiError(422, 'invalid_shipping', 'Tujuan pengiriman wajib diisi.', { destination: 'Wajib diisi' })
+    }
     const m = (await payload.find({ collection: 'shipping-methods', where: { and: [{ slug: { equals: input.shippingId } }, { active: { equals: true } }] }, limit: 1, depth: 0, req })).docs[0]
     if (!m) throw new ApiError(422, 'invalid_shipping', 'Metode pengiriman tidak valid.', { shippingId: 'Tidak valid' })
     const settings = await payload.findGlobal({ slug: 'site-settings', depth: 0 })
