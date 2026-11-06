@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 
 import { scheduleRebuild } from '../../hooks/triggerRebuild'
+import { refreshVersionCache, writeProductCache } from '../productCache'
 import { notifyBackInStock } from '../stockAlerts'
 import { loyverse, type LoyverseItem, type LoyverseTax } from './client'
 import { syncMenu } from './menu'
@@ -133,7 +134,11 @@ export async function syncLoyverse(payload: Payload): Promise<SyncResult> {
 
       const prev = product.loyverse ?? {}
       const changed = Object.entries(next).some(([k, v]) => !same((prev as Record<string, unknown>)[k], v))
-      if (!changed) continue
+      if (!changed) {
+        // Data tabel utama sudah benar; pastikan versi terbaru (yang dibaca form admin) ikut sama.
+        await refreshVersionCache(payload, product.id, prev as never, { payload } as never)
+        continue
+      }
 
       if (prev.active !== next.active) {
         listChanged = true
@@ -141,10 +146,11 @@ export async function syncLoyverse(payload: Payload): Promise<SyncResult> {
       }
       // Tulis langsung lewat adapter DB: tanpa validasi/hook dan tanpa membuat versi baru
       // (cache ini berubah tiap beberapa menit dan harus mengenai dokumen yang terbit).
-      await payload.db.updateOne({
-        collection: 'products',
-        id: product.id,
-        data: {
+      // Ditulis ke tabel utama dan ke versi terbaru, supaya form admin ikut menampilkan nilai terbaru.
+      await writeProductCache(
+        payload,
+        product.id,
+        {
           loyverse: {
             ...prev,
             ...next,
@@ -152,8 +158,8 @@ export async function syncLoyverse(payload: Payload): Promise<SyncResult> {
             syncedAt: new Date().toISOString(),
           },
         },
-        req: { payload } as never,
-      })
+        { payload } as never,
+      )
       result.updated++
       // Stok kembali dari habis → kabari pendaftar notifikasi stok.
       if (prev.soldOut && 'soldOut' in next && !next.soldOut && product._status === 'published') {

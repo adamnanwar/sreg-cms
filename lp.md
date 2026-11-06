@@ -120,8 +120,6 @@ Auth bawaan Payload pada koleksi `customers`. Semua memakai `credentials: 'inclu
 | `POST /customers/login` | `{ email, password }` | Langsung bisa login tanpa verifikasi. Terkunci 10 menit setelah 5 kali salah. |
 | `POST /customers/otp/send` | | Wajib login. Mengirim kode 6 angka ke email pelanggan (berlaku 10 menit, minta ulang setelah 60 detik). `202 { ok, expiresInSeconds, resendAfterSeconds }`. |
 | `POST /customers/otp/verify` | `{ code }` | Wajib login. Kode benar → `emailVerified: true`. Salah 5 kali, kode hangus. Kode error: `otp_invalid`, `otp_expired` (410), `otp_locked`, `otp_cooldown`, `already_verified`. |
-
-Status verifikasi ada di `user.emailVerified` pada `GET /customers/me`. Halaman `/verify?token=` dan `POST /customers/verify/:token` **sudah tidak ada**.
 | `POST /customers/logout` | | |
 | `GET /customers/me` | | `{ user }` atau `user: null` bila belum login. |
 | `PATCH /customers/:id` | `{ name, phone, addresses, newsletter }` | Hanya data sendiri. |
@@ -129,6 +127,8 @@ Status verifikasi ada di `user.emailVerified` pada `GET /customers/me`. Halaman 
 | `POST /customers/reset-password` | `{ token, password }` | |
 | `GET /customers/me/orders?page=1&per_page=10` | | Riwayat pesanan, `{ data, meta }`. |
 | `POST /wishlist` | `{ productSlug, action? }` | `action`: `add`/`remove`; kosong = toggle. Wajib login. |
+
+Status verifikasi ada di `user.emailVerified` pada `GET /customers/me`. Halaman `/verify?token=` dan `POST /customers/verify/:token` **sudah tidak ada**.
 
 Alamat tersimpan: array `addresses` di data pelanggan (`label, firstName, lastName, phone, country, street, address2, province, city, district, postalCode, isDefault`).
 
