@@ -1,8 +1,9 @@
 import { ValidationError, type Access, type CollectionConfig, type FieldAccess } from 'payload'
 
 import { isAdmin, isAdminOrOps } from '../access'
+import { sendEmailOtp, verifyEmailOtp } from '../lib/customers/otp'
 import { frontendUrl, renderEmail } from '../lib/email/send'
-import { ApiError, customerOf, handle } from '../lib/http'
+import { ApiError, customerOf, handle, rateLimit, readJson, str } from '../lib/http'
 import { serializeOrder } from '../lib/orders/serialize'
 
 const never: FieldAccess = () => false
@@ -22,17 +23,8 @@ export const Customers: CollectionConfig = {
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
     cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' },
-    verify: {
-      generateEmailSubject: async ({ req, user }) =>
-        (await renderEmail(req.payload, 'verify-email', { customerName: (user as { name?: string }).name })).subject,
-      generateEmailHTML: async ({ req, token, user }) =>
-        (
-          await renderEmail(req.payload, 'verify-email', {
-            customerName: (user as { name?: string }).name,
-            verifyUrl: frontendUrl(`/verify?token=${token}`),
-          })
-        ).html,
-    },
+    // Tanpa `verify`: pendaftar langsung bisa login. Verifikasi email dilakukan belakangan lewat kode OTP
+    // (POST /customers/otp/send dan /customers/otp/verify), hasilnya di field `emailVerified`.
     forgotPassword: {
       generateEmailSubject: async (args) =>
         args?.req
@@ -90,12 +82,43 @@ export const Customers: CollectionConfig = {
       ],
     },
     { name: 'newsletter', type: 'checkbox', defaultValue: false },
+    // Diisi server saja, lewat kode OTP.
+    { name: 'emailVerified', type: 'checkbox', defaultValue: false, admin: { readOnly: true }, access: { create: never, update: never } },
+    { name: 'otpHash', type: 'text', admin: { hidden: true }, access: { read: never, create: never, update: never } },
+    { name: 'otpExpiresAt', type: 'date', admin: { hidden: true }, access: { read: never, create: never, update: never } },
+    { name: 'otpSentAt', type: 'date', admin: { hidden: true }, access: { read: never, create: never, update: never } },
+    { name: 'otpAttempts', type: 'number', defaultValue: 0, admin: { hidden: true }, access: { read: never, create: never, update: never } },
     { name: 'wishlist', type: 'relationship', relationTo: 'products', hasMany: true },
     // Diisi server saja.
     { name: 'xeroContactId', type: 'text', admin: { readOnly: true }, access: { create: never, update: never } },
     { name: 'loyverseCustomerId', type: 'text', access: { create: never, update: never } },
   ],
   endpoints: [
+    {
+      // POST /api/customers/otp/send : kirim kode verifikasi 6 angka ke email pelanggan yang sedang login
+      path: '/otp/send',
+      method: 'post',
+      handler: handle(async (req) => {
+        const me = customerOf(req)
+        if (!me) throw new ApiError(401, 'unauthorized', 'Silakan login.')
+        rateLimit(req, 'otp-send', 10, 10 * 60_000)
+        const r = await sendEmailOtp(req.payload, me.id)
+        return Response.json({ ok: true, ...r }, { status: 202 })
+      }),
+    },
+    {
+      // POST /api/customers/otp/verify  { code }
+      path: '/otp/verify',
+      method: 'post',
+      handler: handle(async (req) => {
+        const me = customerOf(req)
+        if (!me) throw new ApiError(401, 'unauthorized', 'Silakan login.')
+        rateLimit(req, 'otp-verify', 20, 10 * 60_000)
+        const body = await readJson(req)
+        await verifyEmailOtp(req.payload, me.id, str(body, 'code', { required: true, max: 12 }))
+        return Response.json({ ok: true, emailVerified: true })
+      }),
+    },
     {
       // GET /api/customers/me/orders
       path: '/me/orders',

@@ -50,6 +50,22 @@ const allowedOrigins = [
   .map((o) => o?.trim())
   .filter((o): o is string => Boolean(o))
 
+/**
+ * Menu yang disembunyikan dari panel admin karena frontend belum memakainya (lihat api-notes.md).
+ * Hanya menyembunyikan menu: API, data, seed, dan akses lewat URL tetap bekerja.
+ * Tampilkan lagi dengan menghapus slug dari daftar ini, atau sementara dengan ADMIN_SHOW_ALL=1.
+ */
+const hiddenInAdmin = new Set([
+  // koleksi
+  'pages', 'faqs', 'reviews', 'returns', 'stock-alerts', 'newsletter-subscribers', 'contact-messages',
+  'wholesale-inquiries', 'redirects', 'provinces', 'cities', 'districts',
+  // globals (teks halaman masih ada di kode frontend)
+  'home', 'about', 'gallery', 'news-page', 'faq-page', 'contact-page', 'navigation', 'footer', 'announcement',
+  'site-settings', 'ui-strings',
+])
+const hide = <T extends { slug: string; admin?: object }>(c: T): T =>
+  process.env.ADMIN_SHOW_ALL !== '1' && hiddenInAdmin.has(c.slug) ? { ...c, admin: { ...(c.admin ?? {}), hidden: true } } : c
+
 /** Path di frontend untuk Live Preview. */
 const previewPaths: Record<string, (doc: { slug?: string }) => string> = {
   products: (d) => `/products/${d.slug}`,
@@ -114,8 +130,8 @@ export default buildConfig({
     ContactMessages,
     WholesaleInquiries,
     EmailTemplates,
-  ],
-  globals: [SiteSettings, Announcement, Navigation, Footer, Home, About, Gallery, NewsPage, FaqPage, ContactPage, UiStrings, Integrations],
+  ].map(hide),
+  globals: [SiteSettings, Announcement, Navigation, Footer, Home, About, Gallery, NewsPage, FaqPage, ContactPage, UiStrings, Integrations].map(hide),
   // Email: SMTP bila SMTP_HOST diisi; tanpa itu Payload hanya mencatat email ke log (dev).
   ...(process.env.SMTP_HOST
     ? {
@@ -200,6 +216,9 @@ export default buildConfig({
       fields: ({ defaultFields }) =>
         defaultFields.map((f) => ('type' in f && (f.type === 'text' || f.type === 'textarea') ? { ...f, localized: true } : f)),
     }),
-    redirectsPlugin({ collections: ['products', 'articles', 'pages'] }),
+    redirectsPlugin({
+      collections: ['products', 'articles', 'pages'],
+      overrides: { admin: { hidden: process.env.ADMIN_SHOW_ALL !== '1' } },
+    }),
   ],
 })

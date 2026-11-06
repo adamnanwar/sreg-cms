@@ -81,7 +81,7 @@ export const EmailTemplates: CollectionConfig = {
       localized: true,
       admin: {
         description:
-          'Placeholder: {{orderNumber}} {{customerName}} {{total}} {{orderUrl}} {{trackingUrl}} {{invoiceUrl}} {{productName}} {{productUrl}} {{returnStatus}} {{resetUrl}} {{verifyUrl}} {{confirmUrl}}',
+          'Placeholder: {{orderNumber}} {{customerName}} {{total}} {{orderUrl}} {{trackingUrl}} {{invoiceUrl}} {{productName}} {{productUrl}} {{returnStatus}} {{resetUrl}} {{code}} {{minutes}} {{confirmUrl}}',
       },
     },
     { name: 'active', type: 'checkbox', defaultValue: true, admin: { position: 'sidebar', description: 'Nonaktif → teks bawaan dipakai.' } },

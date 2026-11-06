@@ -7,7 +7,7 @@ Catatan sebelumnya ada di [fase1-catatan.md](fase1-catatan.md); isinya masih ber
 
 ## Yang sudah dibuat
 
-**Akun** — `customers` (auth terpisah dari admin): daftar, login cookie, verifikasi email (login ditolak sebelum verifikasi), lupa password, kunci akun 5 kali gagal / 10 menit, alamat tersimpan, wishlist. Kata sandi divalidasi di server (min. 8, huruf + angka). Pelanggan tidak bisa menulis `_verified` atau field internal lewat API.
+**Akun** — `customers` (auth terpisah dari admin): daftar, login cookie, tanpa verifikasi saat daftar (verifikasi email belakangan lewat kode OTP, lihat api-changes.md), lupa password, kunci akun 5 kali gagal / 10 menit, alamat tersimpan, wishlist. Kata sandi divalidasi di server (min. 8, huruf + angka). Pelanggan tidak bisa menulis `emailVerified` atau field internal lewat API.
 
 **Checkout** — `shipping-methods`, `payment-methods`, `discount-codes` (tidak bisa dibaca publik), `provinces/cities/districts` + skrip `pnpm import:regions <file.json>`.
 - `POST /api/checkout/quote`: harga, pajak, stok, diskon, ongkir, biaya bayar dihitung ulang di server. Kode error: `out_of_stock`, `option_required`, `invalid_option`, `variant_required`, `invalid_discount`, `product_unavailable`, `validation_error`.
@@ -34,7 +34,7 @@ Catatan sebelumnya ada di [fase1-catatan.md](fase1-catatan.md); isinya masih ber
 5. **`guestToken` tidak kedaluwarsa** (pertanyaan 7 belum dijawab). Nomor pesanan: 4 digit acak per hari; bila lebih dari ±5.000 pesanan/hari, perpanjang.
 6. ~~Membatalkan pesanan yang sudah dibayar diizinkan~~ (diganti: pelanggan hanya bisa membatalkan sebelum bayar; admin yang membatalkan pesanan berbayar): status jadi `cancelled`, `needsRefund` dicentang. **Tidak ada refund otomatis ke gateway**; ops memprosesnya manual.
 7. **Form publik tidak "create terbuka" di collection** seperti tertulis di `cms.md`: pembuatan hanya lewat endpoint (agar rate limit dan honeypot selalu berlaku).
-8. **Rute frontend yang saya asumsikan** untuk tautan di email: `/verify?token=`, `/reset-password?token=`, `/order/<nomor>?token=`, `/newsletter/confirm?token=`, `/products/<slug>`, `/mock-pay?order=`. Sesuaikan di [src/lib/email/send.ts](src/lib/email/send.ts) dan [src/lib/payments/provider.ts](src/lib/payments/provider.ts) bila beda.
+8. **Rute frontend yang saya asumsikan** untuk tautan di email: `/reset-password?token=`, `/order/<nomor>?token=`, `/newsletter/confirm?token=`, `/products/<slug>`, `/mock-pay?order=`. Sesuaikan di [src/lib/email/send.ts](src/lib/email/send.ts) dan [src/lib/payments/provider.ts](src/lib/payments/provider.ts) bila beda.
 9. **Email**: tanpa `SMTP_HOST` email hanya dicatat di log. Verifikasi email wajib sebelum login, jadi SMTP harus siap sebelum pendaftaran dibuka. Template bahasa Indonesia belum ada (buat di admin).
 10. **Ulasan**: `verifiedPurchase` dihitung saat ulasan dibuat dan hanya menghitung pesanan akun (bukan pesanan tamu).
 11. **Retur**: foto hanya bisa ditambah dari admin (belum ada unggah dari pelanggan). Tidak ada credit note Xero.

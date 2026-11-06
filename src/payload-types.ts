@@ -682,6 +682,11 @@ export interface Customer {
       }[]
     | null;
   newsletter?: boolean | null;
+  emailVerified?: boolean | null;
+  otpHash?: string | null;
+  otpExpiresAt?: string | null;
+  otpSentAt?: string | null;
+  otpAttempts?: number | null;
   wishlist?: (number | Product)[] | null;
   xeroContactId?: string | null;
   loyverseCustomerId?: string | null;
@@ -693,8 +698,6 @@ export interface Customer {
   salt?: string | null;
   hash?: string | null;
   resetPasswordRequestedAt?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -1062,7 +1065,7 @@ export interface EmailTemplate {
     | 'contact-received';
   subject: string;
   /**
-   * Placeholder: {{orderNumber}} {{customerName}} {{total}} {{orderUrl}} {{trackingUrl}} {{invoiceUrl}} {{productName}} {{productUrl}} {{returnStatus}} {{resetUrl}} {{verifyUrl}} {{confirmUrl}}
+   * Placeholder: {{orderNumber}} {{customerName}} {{total}} {{orderUrl}} {{trackingUrl}} {{invoiceUrl}} {{productName}} {{productUrl}} {{returnStatus}} {{resetUrl}} {{code}} {{minutes}} {{confirmUrl}}
    */
   body: {
     root: {
@@ -1737,6 +1740,11 @@ export interface CustomersSelect<T extends boolean = true> {
         id?: T;
       };
   newsletter?: T;
+  emailVerified?: T;
+  otpHash?: T;
+  otpExpiresAt?: T;
+  otpSentAt?: T;
+  otpAttempts?: T;
   wishlist?: T;
   xeroContactId?: T;
   loyverseCustomerId?: T;
@@ -1748,8 +1756,6 @@ export interface CustomersSelect<T extends boolean = true> {
   salt?: T;
   hash?: T;
   resetPasswordRequestedAt?: T;
-  _verified?: T;
-  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:

@@ -116,9 +116,12 @@ Auth bawaan Payload pada koleksi `customers`. Semua memakai `credentials: 'inclu
 
 | Endpoint | Body | Catatan |
 |---|---|---|
-| `POST /customers` | `{ name, email, password, phone?, newsletter? }` | Daftar. Email verifikasi dikirim. Kata sandi minimal 8, ada huruf dan angka. |
-| `POST /customers/verify/:token` | | Token dari tautan email (`<frontend>/verify?token=…`). |
-| `POST /customers/login` | `{ email, password }` | **Ditolak sebelum email diverifikasi.** Terkunci 10 menit setelah 5 kali salah. |
+| `POST /customers` | `{ name, email, password, phone?, newsletter? }` | Daftar. **Tidak ada verifikasi email saat mendaftar**: setelah sukses, panggil `POST /customers/login` dengan email dan kata sandi yang sama. Kata sandi minimal 8, ada huruf dan angka. |
+| `POST /customers/login` | `{ email, password }` | Langsung bisa login tanpa verifikasi. Terkunci 10 menit setelah 5 kali salah. |
+| `POST /customers/otp/send` | | Wajib login. Mengirim kode 6 angka ke email pelanggan (berlaku 10 menit, minta ulang setelah 60 detik). `202 { ok, expiresInSeconds, resendAfterSeconds }`. |
+| `POST /customers/otp/verify` | `{ code }` | Wajib login. Kode benar → `emailVerified: true`. Salah 5 kali, kode hangus. Kode error: `otp_invalid`, `otp_expired` (410), `otp_locked`, `otp_cooldown`, `already_verified`. |
+
+Status verifikasi ada di `user.emailVerified` pada `GET /customers/me`. Halaman `/verify?token=` dan `POST /customers/verify/:token` **sudah tidak ada**.
 | `POST /customers/logout` | | |
 | `GET /customers/me` | | `{ user }` atau `user: null` bila belum login. |
 | `PATCH /customers/:id` | `{ name, phone, addresses, newsletter }` | Hanya data sendiri. |
@@ -307,9 +310,9 @@ Semua `POST`, balasan `202 { "ok": true }`. Sertakan field **honeypot** `website
 - `POST /reviews` `{ productSlug, rating (1–5), title?, body? }`. Wajib login; satu ulasan per produk; tampil setelah dimoderasi.
 
 ## 8. Email
-Email transaksional (pesanan dibuat, dibayar, dikirim, dibatalkan, verifikasi, reset kata sandi, dll.) dikirim CMS. Tautan di dalamnya menunjuk ke rute frontend berikut; **buat halaman-halaman ini**:
+Email transaksional (pesanan dibuat, dibayar, dikirim, dibatalkan, kode OTP verifikasi, reset kata sandi, dll.) dikirim CMS. Tautan di dalamnya menunjuk ke rute frontend berikut; **buat halaman-halaman ini**:
 
-`/verify?token=` · `/reset-password?token=` · `/order/<nomor>?token=` · `/newsletter/confirm?token=` · `/products/<slug>` · `/mock-pay?order=` (hanya dev)
+`/reset-password?token=` · `/order/<nomor>?token=` · `/newsletter/confirm?token=` · `/products/<slug>` · `/mock-pay?order=` (hanya dev)
 
 ## 9. Live Preview dan rebuild
 - Draf bisa dipratinjau dari admin lewat Live Preview ke situs LP (butuh rute pratinjau dengan `PREVIEW_SECRET`; koordinasikan dengan tim CMS).

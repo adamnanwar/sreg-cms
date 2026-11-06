@@ -41,8 +41,8 @@ export const DEFAULT_TEMPLATES: Record<EmailKey, { subject: string; body: string
     body: 'Hi {{customerName}},\n\nReset your password using this link: {{resetUrl}}\n\nIf you did not ask for this, you can ignore this email.',
   },
   'verify-email': {
-    subject: 'Verify your sregcoffee email',
-    body: 'Hi {{customerName}},\n\nConfirm your email using this link: {{verifyUrl}}',
+    subject: 'Your sregcoffee verification code: {{code}}',
+    body: 'Hi {{customerName}},\n\nYour verification code is {{code}}. It expires in {{minutes}} minutes.\n\nIf you did not ask for this, you can ignore this email.',
   },
   'back-in-stock': {
     subject: '{{productName}} is back in stock',

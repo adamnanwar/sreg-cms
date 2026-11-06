@@ -296,7 +296,7 @@ let customer = (await payload.find({ collection: 'customers', where: { email: { 
 if (!customer) {
   customer = await payload.create({
     collection: 'customers',
-    data: { email: demoEmail, name: 'Demo Customer', password: 'Demo12345', _verified: true } as never,
+    data: { email: demoEmail, name: 'Demo Customer', password: 'Demo12345', emailVerified: true } as never,
     disableVerificationEmail: true,
   })
 }

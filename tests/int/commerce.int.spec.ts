@@ -97,7 +97,7 @@ describe('commerce', () => {
     await payload.create({ collection: 'payment-methods', data: { slug: 'test-pay-fee', name: 'Fee', type: 'qris', fee: 2500 } })
     await payload.create({ collection: 'discount-codes', data: { code: 'TESTPCT10', type: 'percent', value: 10, maxUses: 1 } })
     await payload.create({ collection: 'discount-codes', data: { code: 'TESTEXPIRED', type: 'fixed', value: 5000, endAt: '2020-01-01T00:00:00.000Z' } })
-    customerId = (await payload.create({ collection: 'customers', data: { email: 'cust@test.local', password: 'Passw0rd!x', name: 'Cust', _verified: true } })).id
+    customerId = (await payload.create({ collection: 'customers', data: { email: 'cust@test.local', password: 'Passw0rd!x', name: 'Cust' } })).id
   })
 
   afterAll(async () => {
@@ -284,14 +284,14 @@ describe('commerce', () => {
   })
 
   describe('akun, ulasan, wishlist', () => {
-    it('pendaftaran tidak bisa menetapkan _verified atau field internal', async () => {
+    it('pendaftaran tidak bisa menetapkan emailVerified atau field internal', async () => {
       const c = await payload.create({
         collection: 'customers',
         overrideAccess: false,
-        data: { email: 'new@test.local', password: 'Passw0rd!x', name: 'N', _verified: true, xeroContactId: 'hack' } as never,
+        data: { email: 'new@test.local', password: 'Passw0rd!x', name: 'N', emailVerified: true, xeroContactId: 'hack' } as never,
       })
       const row = await payload.findByID({ collection: 'customers', id: c.id, showHiddenFields: true })
-      expect(row._verified).not.toBe(true)
+      expect(row.emailVerified).not.toBe(true)
       expect(row.xeroContactId).toBeFalsy()
     })
 
